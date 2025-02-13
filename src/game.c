@@ -1,6 +1,5 @@
 #include "game.h"
 
-
 __declspec(dllexport) void __cdecl update_and_render(
   struct game_state *game, 
   struct user_command command
@@ -9,7 +8,7 @@ __declspec(dllexport) void __cdecl update_and_render(
   int pitch = 1280;
   for (int y = 0; y < 720; y++) {
     for (int x = 0; x < 1280; x++) {
-      *(game->display_backbuffer + y * pitch + x) = 0xffff0000;
+      *(game->display_backbuffer + y * pitch + x) = 0xff0000ff;
     }
   }
 

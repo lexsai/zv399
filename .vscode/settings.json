@@ -4,6 +4,7 @@
     "sdl_main.h": "c",
     "chrono": "c",
     "system_error": "c",
-    "xlocale": "c"
+    "xlocale": "c",
+    "stdio.h": "c"
   }
 }
