@@ -5,6 +5,9 @@
     "chrono": "c",
     "system_error": "c",
     "xlocale": "c",
-    "stdio.h": "c"
+    "stdio.h": "c",
+    "windows.h": "c",
+    "xstring": "cpp",
+    "sstream": "cpp"
   }
 }

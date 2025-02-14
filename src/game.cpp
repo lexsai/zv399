@@ -1,6 +1,14 @@
+#include <glad/glad.h>
+
 #include "game.h"
 
-__declspec(dllexport) void __cdecl update_and_render(
+static PFNGLCLEARCOLORPROC clearColor;
+
+extern "C" __declspec(dllexport) void __cdecl init(PFNGLCLEARCOLORPROC clearColorPointer) {
+  clearColor = clearColorPointer;
+}
+
+extern "C" __declspec(dllexport) void __cdecl update_and_render(
   struct game_state *game, 
   struct user_command command
 ) {
@@ -24,6 +32,8 @@ __declspec(dllexport) void __cdecl update_and_render(
   if (command.right) {
     game->playerX += 1;
   }
+
+  clearColor(0.3f, 0.3f, 1.0f, 1.0f);
 
   int halfPlayerWidth = game->playerWidth / 2;
   for (int y = game->playerY - halfPlayerWidth; y < game->playerY + halfPlayerWidth; y++) {

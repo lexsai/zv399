@@ -1,92 +1,55 @@
-#include <stdio.h>
+#include "game.h"
+#include "renderer.h"
 
 #include <Windows.h>
-// #include <glad/glad.h>
+
+#include <glad/glad.h>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
-#include "game.h"
-
-#if 0
-const GLuint WIDTH = 800, HEIGHT = 600;
-int main(int argc, char** argv) {
-    // code without checking for errors
-    SDL_Init(SDL_INIT_VIDEO);
-
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-
-    SDL_Window *window = SDL_CreateWindow(
-        "[glad] GL with SDL",
-        WIDTH, HEIGHT,
-        SDL_WINDOW_OPENGL
-    );
-
-    SDL_GLContext context = SDL_GL_CreateContext(window);
-
-    if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
-      SDL_Log("failed to load GL functions");
-      return -1;
-    }
-
-    int exit = 0;
-    while(!exit) {
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            switch(event.type) {
-                case SDL_EVENT_QUIT:
-                    exit = 1;
-                    break;
-            }
-        }
-
-        glClearColor(0.7f, 0.9f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        SDL_GL_SwapWindow(window);
-        SDL_Delay(1);
-    }
-
-    SDL_GL_DestroyContext(context);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
-
-    return 0;
-}
-#endif
+#include <iostream>
 
 typedef void (__cdecl *UPDATEPROC)(
   struct game_state *game, 
   struct user_command userCommand
 ); 
 
+typedef void (__cdecl *INITPROC)(
+  PFNGLCLEARCOLORPROC clearColorPointer
+); 
+
 struct game_library {
   SDL_SharedObject *handle;
   UPDATEPROC updateAndRender;
+  INITPROC init;
+
   bool loaded;
 };
 
 static struct game_library gameLibrary;
 static struct game_state gameState;
 static struct user_command userCommand;
-static bool globalRunning;
 
 static void loadGameLibrary() {
   CopyFile("game.dll", "game-temp.dll", FALSE);
   gameLibrary.handle = SDL_LoadObject("game-temp.dll");
   if (!gameLibrary.handle) {
-    SDL_Log("failed to load library");
+    std::cout << "failed to load library" << std::endl;
     return;
   }
 
   gameLibrary.updateAndRender = (UPDATEPROC)SDL_LoadFunction(gameLibrary.handle, "update_and_render");
   if (!gameLibrary.updateAndRender) {
-    SDL_Log("failed to find method");
+    std::cout << "failed to find method 'update_and_render'" << std::endl;
     return;
   }
 
+  gameLibrary.init = (INITPROC)SDL_LoadFunction(gameLibrary.handle, "init");
+  if (!gameLibrary.init) {
+    std::cout << "failed to find method 'init'" << std::endl;
+    return;
+  }
+  gameLibrary.init(fillScreen);
   gameLibrary.loaded = true;
 }
 
@@ -123,7 +86,7 @@ void gameInit() {
   gameState.playerWidth = 10;
   gameState.playerX = 100;
   gameState.playerY = 100;
-  gameState.display_backbuffer = calloc(1280 * 720, sizeof(uint32_t));
+  gameState.display_backbuffer = (uint32_t *)calloc(1280 * 720, sizeof(uint32_t));
 }
 
 int main(int argc, char** argv) {
@@ -131,19 +94,30 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  SDL_Window *Window = SDL_CreateWindow("zv399", 1280, 720, 0);
-  SDL_Renderer *Renderer = SDL_CreateRenderer(Window, NULL);
-  SDL_Texture *Texture = SDL_CreateTexture(Renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 1280, 720);
-  
-  if (!Window || !Renderer || !Texture) {
+  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+
+  SDL_Window *window = SDL_CreateWindow("zv399", 1280, 720, SDL_WINDOW_OPENGL);
+  SDL_Renderer *renderer = SDL_CreateRenderer(window, NULL);
+  SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 1280, 720);  
+  SDL_GLContext context = SDL_GL_CreateContext(window);
+
+  if (!window || !renderer || !texture || !context) {
+    return -1;
+  }
+
+  if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
+    std::cout << "failed to load GL functions" << std::endl;
     return -1;
   }
 
   gameInit();
+  rendererInit();
 
   int counter = 0;
-  globalRunning = true;
-  while (globalRunning) {
+  while (true) {
     if (counter == 0) {
       if (gameLibrary.loaded) {
         freeGameLibrary();
@@ -171,19 +145,21 @@ int main(int argc, char** argv) {
         default: break;
       }
     }
-
+    
     if (gameLibrary.loaded) {
       gameLibrary.updateAndRender(&gameState, userCommand);
     }
-  
-    int pitch;
-    char *pix;
-    SDL_LockTexture(Texture, NULL, &pix, &pitch);
-    memcpy(pix, gameState.display_backbuffer, 1280 * 720 * 4);
-    SDL_UnlockTexture(Texture);
 
-    SDL_RenderTexture(Renderer, Texture, NULL, NULL);
-    SDL_RenderPresent(Renderer);
+    SDL_GL_SwapWindow(window);
+
+    // int pitch;
+    // char *pix;
+    // SDL_LockTexture(texture, NULL, &pix, &pitch);
+    // memcpy(pix, gameState.display_backbuffer, 1280 * 720 * 4);
+    // SDL_UnlockTexture(texture);
+
+    // SDL_RenderTexture(renderer, texture, NULL, NULL);
+    // SDL_RenderPresent(renderer);
   }
 
   return 0;
