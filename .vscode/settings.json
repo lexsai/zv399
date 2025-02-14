@@ -8,6 +8,8 @@
     "stdio.h": "c",
     "windows.h": "c",
     "xstring": "cpp",
-    "sstream": "cpp"
+    "sstream": "cpp",
+    "string": "cpp",
+    "ostream": "cpp"
   }
 }

@@ -5,10 +5,8 @@
 #include <stdbool.h>
 
 struct game_state {
-  uint32_t *display_backbuffer;
-  int playerX;
-  int playerY;
-  int playerWidth;
+  float playerX;
+  float playerY;
 };
 
 struct user_command {
@@ -17,5 +15,10 @@ struct user_command {
   bool left;
   bool right;
 };
+
+typedef void (__cdecl *DRAWTRIANGLEPROC)(
+  float x, 
+  float y
+); 
 
 #endif

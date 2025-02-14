@@ -15,7 +15,7 @@ typedef void (__cdecl *UPDATEPROC)(
 ); 
 
 typedef void (__cdecl *INITPROC)(
-  PFNGLCLEARCOLORPROC clearColorPointer
+  DRAWTRIANGLEPROC drawTrianglePointer
 ); 
 
 struct game_library {
@@ -31,7 +31,10 @@ static struct game_state gameState;
 static struct user_command userCommand;
 
 static void loadGameLibrary() {
-  CopyFile("game.dll", "game-temp.dll", FALSE);
+  if (!CopyFileA("game.dll", "game-temp.dll", FALSE)) {
+    std::cout << "failed to copy dll" << std::endl;
+    return;
+  }
   gameLibrary.handle = SDL_LoadObject("game-temp.dll");
   if (!gameLibrary.handle) {
     std::cout << "failed to load library" << std::endl;
@@ -49,7 +52,7 @@ static void loadGameLibrary() {
     std::cout << "failed to find method 'init'" << std::endl;
     return;
   }
-  gameLibrary.init(fillScreen);
+  gameLibrary.init(drawTriangle);
   gameLibrary.loaded = true;
 }
 
@@ -83,10 +86,8 @@ static void receiveInput(SDL_Scancode keyCode, bool isDown) {
 }
 
 void gameInit() {
-  gameState.playerWidth = 10;
-  gameState.playerX = 100;
-  gameState.playerY = 100;
-  gameState.display_backbuffer = (uint32_t *)calloc(1280 * 720, sizeof(uint32_t));
+  gameState.playerX = 1.0f;
+  gameState.playerY = 1.0f;
 }
 
 int main(int argc, char** argv) {
@@ -115,6 +116,7 @@ int main(int argc, char** argv) {
 
   gameInit();
   rendererInit();
+  loadGameLibrary();
 
   int counter = 0;
   while (true) {
@@ -145,7 +147,10 @@ int main(int argc, char** argv) {
         default: break;
       }
     }
-    
+
+    glClearColor(0.3f, 0.5f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+  
     if (gameLibrary.loaded) {
       gameLibrary.updateAndRender(&gameState, userCommand);
     }

@@ -1,5 +1,6 @@
 #include <glad/glad.h>
-#include <glm/vec2.hpp>
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
 
 #include <string>
 #include <fstream>
@@ -19,24 +20,9 @@ static float vertices[] = {
 static unsigned int shaderProgram;
 static unsigned int VAO;
 
-char *readFileToString(char *filename) {
-    FILE *fp;
-    fp = fopen(filename, "rb");
-    
-    fseek (fp, 0, SEEK_END);
-    long fileSize = ftell(fp);
-    fseek (fp, 0, SEEK_SET);
-    char *fileContent = (char *)malloc(fileSize + 1);
-    fread(fileContent, 1, fileSize, fp);
-    fileContent[fileSize] = '\0';
-    fclose (fp);
-    // TODO: bulletproof in case file read fails
-
-    return fileContent;
-}
 
 void rendererInit() {
-  // vertex shader
+  // vertex shader  
   std::string vertexCode;
   std::string fragmentCode;
   std::ifstream vShaderFile;
@@ -129,10 +115,20 @@ void rendererInit() {
   glBindVertexArray(0); 
 }
 
-void fillScreen(float r, float g, float b, float a) {
-  glClearColor(r, g, b, a);
-  glClear(GL_COLOR_BUFFER_BIT);
+void drawTriangle(float x, float y) {
   glUseProgram(shaderProgram);
+  
+  std::cout << x << ", " << y << std::endl;
+
+  glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, 0.0f));
+  glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
+  glm::mat4 projection = glm::ortho(0.0f, 8.0f, 0.0f, 6.0f, 0.1f, 10.0f);
+
+  glm::mat4 mvp = projection * view * model;
+
+  int mvpLoc = glGetUniformLocation(shaderProgram, "mvp");
+  glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+
   glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
   glDrawArrays(GL_TRIANGLES, 0, 3);      
 }

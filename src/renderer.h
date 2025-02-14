@@ -3,4 +3,4 @@
 // };
 
 void rendererInit();
-void fillScreen(float r, float g, float b, float a);
+void drawTriangle(float x, float y);
