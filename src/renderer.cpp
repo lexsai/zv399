@@ -1,3 +1,4 @@
+#include <SDL3/SDL.h>
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
@@ -22,6 +23,10 @@ static unsigned int VAO;
 
 
 void rendererInit() {
+  if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
+    std::cout << "failed to load GL functions" << std::endl;
+  }
+
   // vertex shader  
   std::string vertexCode;
   std::string fragmentCode;
@@ -117,8 +122,6 @@ void rendererInit() {
 
 void drawTriangle(float x, float y, float r, float g, float b, float a) {
   glUseProgram(shaderProgram);
-  
-  std::cout << x << ", " << y << std::endl;
 
   glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, 0.0f));
   glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
@@ -134,4 +137,9 @@ void drawTriangle(float x, float y, float r, float g, float b, float a) {
 
   glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
   glDrawArrays(GL_TRIANGLES, 0, 3);      
+}
+
+void fillScreen(float r, float g, float b, float a) {
+  glClearColor(r, g, b, a);
+  glClear(GL_COLOR_BUFFER_BIT);
 }

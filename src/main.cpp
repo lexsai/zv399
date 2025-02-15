@@ -3,7 +3,6 @@
 
 #include <Windows.h>
 
-#include <glad/glad.h>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
@@ -29,6 +28,9 @@ struct game_library {
 static struct game_library gameLibrary;
 static struct game_state gameState;
 static struct user_command userCommand;
+static int lagTime;
+static int prevTime;
+static SDL_Time prevLastModified;
 
 static void loadGameLibrary() {
   if (!CopyFileA("game.dll", "game-temp.dll", FALSE)) {
@@ -81,6 +83,16 @@ static void receiveInput(SDL_Scancode keyCode, bool isDown) {
       userCommand.right = isDown;
     } break;
 
+    case SDL_SCANCODE_R: {
+      if (!isDown) {
+        if (gameLibrary.loaded) {
+          freeGameLibrary();
+        }
+        loadGameLibrary();
+        break;
+      }
+    }
+
     default: break;
   }
 }
@@ -109,52 +121,40 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
-    std::cout << "failed to load GL functions" << std::endl;
-    return -1;
-  }
-
   gameInit();
   rendererInit();
-
-  int counter = 0;
+  loadGameLibrary();
   while (true) {
-    if (counter == 0) {
+    if (lagTime > 0) {      
+      SDL_Event event; 
+      while (SDL_PollEvent(&event)) {
+        switch (event.type) {
+          case SDL_EVENT_QUIT: {
+            return -1;
+          } break;
+
+          case SDL_EVENT_KEY_DOWN: {
+            receiveInput(event.key.scancode, true);
+          } break;
+          
+          case SDL_EVENT_KEY_UP: {
+            receiveInput(event.key.scancode, false);
+          } break;
+
+          default: break;
+        }
+      }
+
+      fillScreen(0.3f, 0.5f, 1.0f, 1.0f);
+
       if (gameLibrary.loaded) {
-        freeGameLibrary();
+        gameLibrary.updateAndRender(&gameState, userCommand);
       }
-      loadGameLibrary();
-      counter = 120;
+      SDL_GL_SwapWindow(window);
     }
-    counter--;
-
-    SDL_Event event; 
-    while (SDL_PollEvent(&event)) {
-      switch (event.type) {
-        case SDL_EVENT_QUIT: {
-          return -1;
-        } break;
-
-        case SDL_EVENT_KEY_DOWN: {
-          receiveInput(event.key.scancode, true);
-        } break;
-        
-        case SDL_EVENT_KEY_UP: {
-          receiveInput(event.key.scancode, false);
-        } break;
-
-        default: break;
-      }
-    }
-
-    glClearColor(0.3f, 0.5f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-  
-    if (gameLibrary.loaded) {
-      gameLibrary.updateAndRender(&gameState, userCommand);
-    }
-
-    SDL_GL_SwapWindow(window);
+    int nowTime = SDL_GetTicks();
+    lagTime += nowTime - prevTime;
+    prevTime = nowTime;
   }
 
   return 0;

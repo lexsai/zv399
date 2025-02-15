@@ -12,7 +12,7 @@ extern "C" __declspec(dllexport) void __cdecl update_and_render(
   game_state *game, 
   user_command command
 ) {
-  float dt = 1 / 60.0f;
+  float dt = 0.015;
 
   glm::vec2 movement = glm::vec2(0.0f);
 
@@ -30,11 +30,11 @@ extern "C" __declspec(dllexport) void __cdecl update_and_render(
   }
 
   if (movement != glm::vec2(0.0f)) {
-    movement = glm::normalize(movement) * 2.0f * dt;
+    movement = glm::normalize(movement) * 1.0f * dt;
     
     game->playerX += movement.x;
     game->playerY += movement.y;
   }
 
-  drawTriangle(game->playerX, game->playerY, 1.0f, 0.0f, 0.0f, 1.0f);
+  drawTriangle(game->playerX, game->playerY, 0.0f, 0.0f, 0.0f, 1.0f);
 }
