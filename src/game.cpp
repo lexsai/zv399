@@ -33,11 +33,12 @@ extern "C" __declspec(dllexport) void __cdecl update_and_render(
   }
 
   if (movement != glm::vec2(0.0f)) {
-    movement = glm::normalize(movement) * 1.0f * dt;
+    movement = glm::normalize(movement) * 50.0f * dt;
     
     game->playerX += movement.x;
     game->playerY += movement.y;
   }
 
-  drawImage(game->playerX, game->playerY, 1.0, 1.0);
+  drawImage(0.0, 0.0, 1280.0 * 4, 720.0 * 4, 1);
+  drawImage(game->playerX, game->playerY, 50.0, 50.0, 0);
 }

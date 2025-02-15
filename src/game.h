@@ -18,7 +18,8 @@ struct user_command {
 
 typedef void (__cdecl *IMAGEPROC)(
   float x, float y,
-  float w, float h
+  float w, float h,
+  int textureUnit
 ); 
 
 #endif

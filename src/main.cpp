@@ -146,6 +146,8 @@ int main(int argc, char** argv) {
         }
       }
 
+      setCameraPos(gameState.playerX, gameState.playerY);
+
       fillScreen(0.3f, 0.5f, 1.0f, 1.0f);
 
       if (gameLibrary.loaded) {
