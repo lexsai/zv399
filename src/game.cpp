@@ -2,10 +2,13 @@
 
 #include "glm/glm.hpp"
 
-static DRAWTRIANGLEPROC drawTriangle;
+static IMAGEPROC drawImage;
 
-extern "C" __declspec(dllexport) void __cdecl init(DRAWTRIANGLEPROC drawTrianglePointer) {
-  drawTriangle = drawTrianglePointer;
+// TODO(lexsai): move these callback functions to a struct!
+extern "C" __declspec(dllexport) void __cdecl init(
+  IMAGEPROC drawImagePointer
+) {
+  drawImage = drawImagePointer;
 }
 
 extern "C" __declspec(dllexport) void __cdecl update_and_render(
@@ -36,5 +39,5 @@ extern "C" __declspec(dllexport) void __cdecl update_and_render(
     game->playerY += movement.y;
   }
 
-  drawTriangle(game->playerX, game->playerY, 0.0f, 0.0f, 0.0f, 1.0f);
+  drawImage(game->playerX, game->playerY, 1.0, 1.0);
 }

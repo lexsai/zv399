@@ -16,9 +16,9 @@ struct user_command {
   bool right;
 };
 
-typedef void (__cdecl *DRAWTRIANGLEPROC)(
+typedef void (__cdecl *IMAGEPROC)(
   float x, float y,
-  float r, float g, float b, float a
+  float w, float h
 ); 
 
 #endif

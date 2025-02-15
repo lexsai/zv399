@@ -14,7 +14,7 @@ typedef void (__cdecl *UPDATEPROC)(
 ); 
 
 typedef void (__cdecl *INITPROC)(
-  DRAWTRIANGLEPROC drawTrianglePointer
+  IMAGEPROC drawImagePointer
 ); 
 
 struct game_library {
@@ -54,7 +54,7 @@ static void loadGameLibrary() {
     std::cout << "failed to find method 'init'" << std::endl;
     return;
   }
-  gameLibrary.init(drawTriangle);
+  gameLibrary.init(drawImage);
   gameLibrary.loaded = true;
 }
 
@@ -124,6 +124,7 @@ int main(int argc, char** argv) {
   gameInit();
   rendererInit();
   loadGameLibrary();
+  
   while (true) {
     if (lagTime > 0) {      
       SDL_Event event; 
