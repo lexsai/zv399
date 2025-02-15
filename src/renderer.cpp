@@ -115,19 +115,22 @@ void rendererInit() {
   glBindVertexArray(0); 
 }
 
-void drawTriangle(float x, float y) {
+void drawTriangle(float x, float y, float r, float g, float b, float a) {
   glUseProgram(shaderProgram);
   
   std::cout << x << ", " << y << std::endl;
 
   glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, 0.0f));
   glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
-  glm::mat4 projection = glm::ortho(0.0f, 8.0f, 0.0f, 6.0f, 0.1f, 10.0f);
+  glm::mat4 projection = glm::ortho(0.0f, 30.0f, 0.0f, 17.0f, 0.1f, 10.0f);
 
   glm::mat4 mvp = projection * view * model;
 
   int mvpLoc = glGetUniformLocation(shaderProgram, "mvp");
   glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+
+  int uniformColorLoc = glGetUniformLocation(shaderProgram, "uniformColor");
+  glUniform4fv(uniformColorLoc, 1, glm::value_ptr(glm::vec4(r, g, b, a)));
 
   glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
   glDrawArrays(GL_TRIANGLES, 0, 3);      

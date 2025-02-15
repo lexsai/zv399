@@ -86,8 +86,8 @@ static void receiveInput(SDL_Scancode keyCode, bool isDown) {
 }
 
 void gameInit() {
-  gameState.playerX = 1.0f;
-  gameState.playerY = 1.0f;
+  gameState.playerX = 5.0f;
+  gameState.playerY = 5.0f;
 }
 
 int main(int argc, char** argv) {
@@ -116,7 +116,6 @@ int main(int argc, char** argv) {
 
   gameInit();
   rendererInit();
-  loadGameLibrary();
 
   int counter = 0;
   while (true) {
@@ -156,15 +155,6 @@ int main(int argc, char** argv) {
     }
 
     SDL_GL_SwapWindow(window);
-
-    // int pitch;
-    // char *pix;
-    // SDL_LockTexture(texture, NULL, &pix, &pitch);
-    // memcpy(pix, gameState.display_backbuffer, 1280 * 720 * 4);
-    // SDL_UnlockTexture(texture);
-
-    // SDL_RenderTexture(renderer, texture, NULL, NULL);
-    // SDL_RenderPresent(renderer);
   }
 
   return 0;

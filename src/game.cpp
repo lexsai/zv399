@@ -1,5 +1,7 @@
 #include "game.h"
 
+#include "glm/glm.hpp"
+
 static DRAWTRIANGLEPROC drawTriangle;
 
 extern "C" __declspec(dllexport) void __cdecl init(DRAWTRIANGLEPROC drawTrianglePointer) {
@@ -7,21 +9,32 @@ extern "C" __declspec(dllexport) void __cdecl init(DRAWTRIANGLEPROC drawTriangle
 }
 
 extern "C" __declspec(dllexport) void __cdecl update_and_render(
-  struct game_state *game, 
-  struct user_command command
+  game_state *game, 
+  user_command command
 ) {
+  float dt = 1 / 60.0f;
+
+  glm::vec2 movement = glm::vec2(0.0f);
+
   if (command.forward) {
-    game->playerY -= 0.01;
+    movement.y = 1.0f;
   }
   if (command.back) {
-    game->playerY += 0.01;
+    movement.y = -1.0f;
   }
   if (command.left) {
-    game->playerX -= 0.01;
+    movement.x = -1.0f;
   }
   if (command.right) {
-    game->playerX += 0.01;
+    movement.x = 1.0f;
   }
 
-  drawTriangle(game->playerX, -game->playerY);
+  if (movement != glm::vec2(0.0f)) {
+    movement = glm::normalize(movement) * 2.0f * dt;
+    
+    game->playerX += movement.x;
+    game->playerY += movement.y;
+  }
+
+  drawTriangle(game->playerX, game->playerY, 1.0f, 0.0f, 0.0f, 1.0f);
 }

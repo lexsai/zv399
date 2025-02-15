@@ -17,8 +17,8 @@ struct user_command {
 };
 
 typedef void (__cdecl *DRAWTRIANGLEPROC)(
-  float x, 
-  float y
+  float x, float y,
+  float r, float g, float b, float a
 ); 
 
 #endif
