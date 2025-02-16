@@ -33,10 +33,11 @@ void loadTexture(char *filename, char *textureName, unsigned int textureUnit) {
 
   int width, height, nrChannels;
   stbi_set_flip_vertically_on_load(true);
-  unsigned char *data = stbi_load(filename, &width, &height, &nrChannels, 0);
+  unsigned char *data = stbi_load(filename, &width, &height, &nrChannels, STBI_rgb_alpha);
   if (data)
   {
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
   }
   else
@@ -105,6 +106,9 @@ void rendererInit() {
   if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
     std::cout << "failed to load GL functions" << std::endl;
   }
+  
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   shaderProgram = createShaderProgram("assets/shaders/vert.glsl", "assets/shaders/frag.glsl");
 

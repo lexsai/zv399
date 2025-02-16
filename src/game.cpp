@@ -7,7 +7,7 @@ static renderer_interface renderer;
 extern "C" __declspec(dllexport) void __cdecl init(renderer_interface rendererInterface) {
   renderer = rendererInterface;
 
-  renderer.loadTexture("assets/bg1.jpg", "bg1", 0);
+  renderer.loadTexture("assets/transparentplayer.png", "player", 0);
   renderer.loadTexture("assets/bg2.jpg", "bg2", 1);
   renderer.loadTexture("assets/bg3.jpg", "bg3", 2);
 }
@@ -44,7 +44,7 @@ extern "C" __declspec(dllexport) void __cdecl update_and_render(
   if (game->playerY <= 100.0) {
     renderer.drawImage(100.0, 100.0, 300.0, 300.0, "bg3");
   }
-  renderer.drawImage(game->playerX, game->playerY, 50.0, 50.0, "bg1");
+  renderer.drawImage(game->playerX, game->playerY, 50.0, 50.0, "player");
   if (game->playerY > 100.0) {
     renderer.drawImage(100.0, 100.0, 300.0, 300.0, "bg3");
   }
