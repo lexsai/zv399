@@ -11,39 +11,59 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <unordered_map>
 
 static unsigned int shaderProgram;
 static unsigned int VAO;
-static unsigned int texture1;
-static unsigned int texture2;
 static float cameraX;
 static float cameraY;
+static std::unordered_map<std::string, unsigned int> textureMap;
 
-void rendererInit() {
-  if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
-    std::cout << "failed to load GL functions" << std::endl;
-  }
+void loadTexture(char *filename, char *textureName, unsigned int textureUnit) {
+  unsigned int texture;
+  glGenTextures(1, &texture);
 
-  std::string vertexCode;
-  std::string fragmentCode;
-  std::ifstream vShaderFile;
-  std::ifstream fShaderFile;
-  try 
+  glActiveTexture(GL_TEXTURE0 + textureUnit);
+  glBindTexture(GL_TEXTURE_2D, texture); 
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  int width, height, nrChannels;
+  stbi_set_flip_vertically_on_load(true);
+  unsigned char *data = stbi_load(filename, &width, &height, &nrChannels, 0);
+  if (data)
   {
-      vShaderFile.open("assets/shaders/vert.glsl");
-      fShaderFile.open("assets/shaders/frag.glsl");
-      std::stringstream vShaderStream, fShaderStream;
-      vShaderStream << vShaderFile.rdbuf();
-      fShaderStream << fShaderFile.rdbuf();
-      vShaderFile.close();
-      fShaderFile.close();
-      vertexCode   = vShaderStream.str();
-      fragmentCode = fShaderStream.str();
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
   }
-  catch (std::ifstream::failure& e)
+  else
   {
-      std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
+    std::cout << "Failed to load texture: " << filename << " in texture unit " << textureUnit << std::endl;
   }
+  stbi_image_free(data);;
+
+  textureMap[textureName] = textureUnit;
+}
+
+static std::string readFileToString(char *filename) {
+  std::ostringstream fileContentStream;
+  try {
+    std::ifstream ifs = std::ifstream(filename);
+    fileContentStream << ifs.rdbuf();
+    ifs.close();
+  }
+  catch (std::ifstream::failure& e) {
+    std::cout << "failed to read shader file contents: " << e.what() << std::endl;
+  }
+  return fileContentStream.str();
+}
+
+static unsigned int createShaderProgram(char *vertFile, char *fragFile) {
+  std::string vertexCode = readFileToString(vertFile);
+  std::string fragmentCode = readFileToString(fragFile);
   const char *vertexShaderSource = vertexCode.c_str();
   const char *fragmentShaderSource = fragmentCode.c_str();
 
@@ -55,8 +75,8 @@ void rendererInit() {
   glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
   if (!success)
   {
-      glGetShaderInfoLog(vertexShader, 512, 0, infoLog);
-      std::cout << "failed to compile vertex" << std::endl;
+    glGetShaderInfoLog(vertexShader, 512, 0, infoLog);
+    std::cout << "failed to compile vertex" << std::endl;
   }
   unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
   glShaderSource(fragmentShader, 1, &fragmentShaderSource, 0);
@@ -64,30 +84,39 @@ void rendererInit() {
   glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
   if (!success)
   {
-      glGetShaderInfoLog(fragmentShader, 512, 0, infoLog);
-      std::cout << "failed to compile frag" << std::endl;
+    glGetShaderInfoLog(fragmentShader, 512, 0, infoLog);
+    std::cout << "failed to compile frag" << std::endl;
   }
-  shaderProgram = glCreateProgram();
-  glAttachShader(shaderProgram, vertexShader);
-  glAttachShader(shaderProgram, fragmentShader);
-  glLinkProgram(shaderProgram);
-  glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+  unsigned int newShaderProgram = glCreateProgram();
+  glAttachShader(newShaderProgram, vertexShader);
+  glAttachShader(newShaderProgram, fragmentShader);
+  glLinkProgram(newShaderProgram);
+  glGetProgramiv(newShaderProgram, GL_LINK_STATUS, &success);
   if (!success) {
-      glGetProgramInfoLog(shaderProgram, 512, 0, infoLog);
-      std::cout << "failed to link" << std::endl;
+    glGetProgramInfoLog(newShaderProgram, 512, 0, infoLog);
+    std::cout << "failed to link" << std::endl;
   }
   glDeleteShader(vertexShader);
   glDeleteShader(fragmentShader);
+  return newShaderProgram;
+}
+
+void rendererInit() {
+  if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
+    std::cout << "failed to load GL functions" << std::endl;
+  }
+
+  shaderProgram = createShaderProgram("assets/shaders/vert.glsl", "assets/shaders/frag.glsl");
 
   float vertices[] = {
-    // positions       // texture coords
-    1.0f, 1.0f, 0.0f, 1.0f, 1.0f,   // top right
-    1.0f, 0.0f, 0.0f, 1.0f, 0.0f,   // bottom right
-    0.0f, 1.0f, 0.0f, 0.0f, 1.0f,    // top left,
-    1.0f, 0.0f, 0.0f, 1.0f, 0.0f,   // bottom right
-    0.0f, 0.0f, 0.0f, 0.0f, 0.0f,   // bottom left
-    0.0f, 1.0f, 0.0f, 0.0f, 1.0f    // top left,
-};
+    // positions      // texture coords
+    1.0f, 1.0f, 0.0f, 1.0f, 1.0f, // top right
+    1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom right
+    0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // top left
+    1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom right
+    0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // bottom left
+    0.0f, 1.0f, 0.0f, 0.0f, 1.0f  // top left
+  };
 
   unsigned int VBO;
   glGenVertexArrays(1, &VAO);
@@ -103,55 +132,12 @@ void rendererInit() {
   glEnableVertexAttribArray(1);  
 
   glBindBuffer(GL_ARRAY_BUFFER, 0); 
-
   glBindVertexArray(0); 
-  glGenTextures(1, &texture1);
-  // brick wall goes in texture unit 0
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, texture1); 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  int width, height, nrChannels;
-  stbi_set_flip_vertically_on_load(true);
-  unsigned char *data = stbi_load("assets/bg1.jpg", &width, &height, &nrChannels, 0);
-  if (data)
-  {
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-      glGenerateMipmap(GL_TEXTURE_2D);
-  }
-  else
-  {
-      std::cout << "Failed to load texture" << std::endl;
-  }
-  stbi_image_free(data);;
-
-  glGenTextures(1, &texture2);
-  // my wallpaper goes in texture unit 1
-  glActiveTexture(GL_TEXTURE1);
-  glBindTexture(GL_TEXTURE_2D, texture2); 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  stbi_set_flip_vertically_on_load(true);
-  data = stbi_load("assets/bg2.jpg", &width, &height, &nrChannels, 0);
-  if (data)
-  {
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-      glGenerateMipmap(GL_TEXTURE_2D);
-  }
-  else
-  {
-      std::cout << "Failed to load texture" << std::endl;
-  }
-  stbi_image_free(data);
 
   glUniform1i(glGetUniformLocation(shaderProgram, "currentTextureUnit"), 0);
 }
 
-void drawImage(float x, float y, float w, float h, int textureUnit) {
+void drawImage(float x, float y, float w, float h, char *textureName) {
   glUseProgram(shaderProgram);
 
   glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(x - 0.5, y - 0.5, 0.0f));
@@ -168,7 +154,7 @@ void drawImage(float x, float y, float w, float h, int textureUnit) {
   int mvpLoc = glGetUniformLocation(shaderProgram, "mvp");
   glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(mvp));
 
-  glUniform1i(glGetUniformLocation(shaderProgram, "currentTextureUnit"), textureUnit);
+  glUniform1i(glGetUniformLocation(shaderProgram, "currentTextureUnit"), textureMap[textureName]);
 
   glBindVertexArray(VAO);
   glDrawArrays(GL_TRIANGLES, 0, 6);  

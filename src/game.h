@@ -16,10 +16,21 @@ struct user_command {
   bool right;
 };
 
-typedef void (__cdecl *IMAGEPROC)(
+typedef void (__cdecl *DRAWIMAGEPROC)(
   float x, float y,
   float w, float h,
-  int textureUnit
+  char* textureName
 ); 
+
+typedef void (__cdecl *LOADTEXTUREPROC)(
+  char *filename, 
+  char *textureName, 
+  unsigned int textureUnit
+); 
+
+struct renderer_interface {
+  DRAWIMAGEPROC drawImage;
+  LOADTEXTUREPROC loadTexture;
+};
 
 #endif

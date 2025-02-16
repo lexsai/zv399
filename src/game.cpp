@@ -2,13 +2,14 @@
 
 #include "glm/glm.hpp"
 
-static IMAGEPROC drawImage;
+static renderer_interface renderer; 
 
-// TODO(lexsai): move these callback functions to a struct!
-extern "C" __declspec(dllexport) void __cdecl init(
-  IMAGEPROC drawImagePointer
-) {
-  drawImage = drawImagePointer;
+extern "C" __declspec(dllexport) void __cdecl init(renderer_interface rendererInterface) {
+  renderer = rendererInterface;
+
+  renderer.loadTexture("assets/bg1.jpg", "bg1", 0);
+  renderer.loadTexture("assets/bg2.jpg", "bg2", 1);
+  renderer.loadTexture("assets/bg3.jpg", "bg3", 2);
 }
 
 extern "C" __declspec(dllexport) void __cdecl update_and_render(
@@ -39,6 +40,12 @@ extern "C" __declspec(dllexport) void __cdecl update_and_render(
     game->playerY += movement.y;
   }
 
-  drawImage(0.0, 0.0, 1280.0 * 4, 720.0 * 4, 1);
-  drawImage(game->playerX, game->playerY, 50.0, 50.0, 0);
+  renderer.drawImage(0.0, 0.0, 1280.0 * 4, 720.0 * 4, "bg2");
+  if (game->playerY <= 100.0) {
+    renderer.drawImage(100.0, 100.0, 300.0, 300.0, "bg3");
+  }
+  renderer.drawImage(game->playerX, game->playerY, 50.0, 50.0, "bg1");
+  if (game->playerY > 100.0) {
+    renderer.drawImage(100.0, 100.0, 300.0, 300.0, "bg3");
+  }
 }

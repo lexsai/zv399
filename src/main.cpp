@@ -14,7 +14,7 @@ typedef void (__cdecl *UPDATEPROC)(
 ); 
 
 typedef void (__cdecl *INITPROC)(
-  IMAGEPROC drawImagePointer
+  renderer_interface rendererInterface
 ); 
 
 struct game_library {
@@ -30,7 +30,6 @@ static struct game_state gameState;
 static struct user_command userCommand;
 static int lagTime;
 static int prevTime;
-static SDL_Time prevLastModified;
 
 static void loadGameLibrary() {
   if (!CopyFileA("game.dll", "game-temp.dll", FALSE)) {
@@ -54,7 +53,12 @@ static void loadGameLibrary() {
     std::cout << "failed to find method 'init'" << std::endl;
     return;
   }
-  gameLibrary.init(drawImage);
+
+  renderer_interface rendererInterface = {};
+  rendererInterface.drawImage = drawImage;
+  rendererInterface.loadTexture = loadTexture;
+  
+  gameLibrary.init(rendererInterface);
   gameLibrary.loaded = true;
 }
 
