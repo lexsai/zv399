@@ -148,8 +148,8 @@ void drawImage(float x, float y, float w, float h, char *textureName) {
   model = glm::scale(model, glm::vec3(w, h, 1.0f));
   glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
   glm::mat4 projection = glm::ortho(
-    cameraX - 960, cameraX + 960, 
-    cameraY - 540, cameraY + 540, 
+    cameraX - 640, cameraX + 640, 
+    cameraY - 360, cameraY + 360, 
     0.1f, 10.0f
   );
 
