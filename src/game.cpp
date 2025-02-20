@@ -64,6 +64,8 @@ extern "C" __declspec(dllexport) void __cdecl update_and_render(
     game->playerY += movement.y;
   }
 
+  renderer.setCameraPos((int)game->playerX, (int)game->playerY);
+
   for (int y = 0; y < floor_layer.height; y++) {
     for (int x = 0; x < floor_layer.width; x++) {
       int tile = floor_layer.tiles[y * floor_layer.width + x];

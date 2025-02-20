@@ -60,6 +60,7 @@ static void loadGameLibrary() {
   renderer_interface rendererInterface = {};
   rendererInterface.drawImage = drawImage;
   rendererInterface.loadSpritesheet = loadSpritesheet;
+  rendererInterface.setCameraPos = setCameraPos;
   
   gameLibrary.init(rendererInterface);
   gameLibrary.loaded = true;
@@ -161,7 +162,6 @@ int main(int argc, char** argv) {
     if (delta > 0) {
       delta -= 15;
       
-      setCameraPos((int)gameState.playerX, (int)gameState.playerY);
       
       fillScreen(0.3f, 0.5f, 1.0f, 1.0f);
 

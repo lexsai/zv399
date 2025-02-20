@@ -33,9 +33,14 @@ typedef void (__cdecl *LOADSPRITESHEETPROC)(
   unsigned int textureUnit
 ); 
 
+typedef void (__cdecl *SETCAMERAPOSPROC)(
+  float x, float y
+); 
+
 struct renderer_interface {
   DRAWIMAGEPROC drawImage;
   LOADSPRITESHEETPROC loadSpritesheet;
+  SETCAMERAPOSPROC setCameraPos;
 };
 
 #endif
