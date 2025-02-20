@@ -58,10 +58,10 @@ extern "C" __declspec(dllexport) void __cdecl update_and_render(
   }
 
   if (movement != glm::vec2(0.0f)) {
-    movement = glm::normalize(movement) * 300.0f * dt;
+    movement = glm::normalize(movement) * 400.0f * dt;
     
     game->playerX += movement.x;
-    game->playerY += movement.y;
+    game->playerY += movement.y;  
   }
 
   renderer.setCameraPos((int)game->playerX, (int)game->playerY);
