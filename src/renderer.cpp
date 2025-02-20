@@ -145,7 +145,6 @@ void rendererInit() {
     0.0f, 1.0f, 0.0f
   };
 
-
   float texCoords[] = {
     1.0f, 1.0f, // top right
     1.0f, 0.0f, // bottom right
@@ -185,7 +184,7 @@ void drawImage(float x, float y, float w, float h, char *textureName, int sprite
   glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
   glm::mat4 projection = glm::ortho(
     cameraX - 640, cameraX + 640, 
-    cameraY - 360, cameraY + 360, 
+    cameraY - 368, cameraY + 367, 
     0.1f, 10.0f
   );
   

@@ -8,6 +8,7 @@
 
 #include <iostream>
 
+
 typedef void (__cdecl *UPDATEPROC)(
   struct game_state *game, 
   struct user_command userCommand
@@ -28,8 +29,10 @@ struct game_library {
 static struct game_library gameLibrary;
 static struct game_state gameState;
 static struct user_command userCommand;
-static int lagTime;
-static int prevTime;
+
+static unsigned int now;
+static unsigned int last;
+double delta = 0;
 
 static void loadGameLibrary() {
   if (!CopyFileA("game.dll", "game-temp.dll", FALSE)) {
@@ -125,7 +128,7 @@ int main(int argc, char** argv) {
   SDL_Renderer *renderer = SDL_CreateRenderer(window, NULL);
   SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 1280, 720);  
   SDL_GLContext context = SDL_GL_CreateContext(window);
-
+  
   if (!window || !renderer || !texture || !context) {
     return -1;
   }
@@ -135,29 +138,31 @@ int main(int argc, char** argv) {
   rendererInit();
   loadGameLibrary();
   
-  while (true) {
-    if (lagTime > 0) {      
-      SDL_Event event; 
-      while (SDL_PollEvent(&event)) {
-        switch (event.type) {
-          case SDL_EVENT_QUIT: {
-            return -1;
-          } break;
-
-          case SDL_EVENT_KEY_DOWN: {
-            receiveInput(event.key.scancode, true);
-          } break;
-          
-          case SDL_EVENT_KEY_UP: {
-            receiveInput(event.key.scancode, false);
-          } break;
-
-          default: break;
-        }
+  while (true) {   
+    SDL_Event event; 
+    while (SDL_PollEvent(&event)) {
+      switch (event.type) {
+        case SDL_EVENT_QUIT: {
+          return -1;
+        } break;
+        
+        case SDL_EVENT_KEY_DOWN: {
+          receiveInput(event.key.scancode, true);
+        } break;
+        
+        case SDL_EVENT_KEY_UP: {
+          receiveInput(event.key.scancode, false);
+        } break;
+        
+        default: break;
       }
-
-      setCameraPos(gameState.playerX, gameState.playerY);
-
+    }
+    
+    if (delta > 0) {
+      delta -= 15;
+      
+      setCameraPos((int)gameState.playerX, (int)gameState.playerY);
+      
       fillScreen(0.3f, 0.5f, 1.0f, 1.0f);
 
       if (gameLibrary.loaded) {
@@ -165,9 +170,10 @@ int main(int argc, char** argv) {
       }
       SDL_GL_SwapWindow(window);
     }
-    int nowTime = SDL_GetTicks();
-    lagTime += nowTime - prevTime;
-    prevTime = nowTime;
+
+    now = SDL_GetTicks();
+    delta += now - last;
+    last = now;
   }
 
   return 0;

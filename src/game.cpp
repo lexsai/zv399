@@ -31,7 +31,7 @@ void loadMap(char *filename) {
 extern "C" __declspec(dllexport) void __cdecl init(renderer_interface rendererInterface) {
   renderer = rendererInterface;
   // renderer.loadSpritesheet(filename, name, tileWidth, tileHeight, sheetWidth, sheetHeight, textureUnit)
-  renderer.loadSpritesheet("assets/tiles.png", "tiles", 16, 16, 4, 4, 0);
+  renderer.loadSpritesheet("assets/tiles.png", "spritesheet1", 16, 16, 4, 4, 0);
 
   loadMap("assets/testmap.tmj");
 }
@@ -40,7 +40,7 @@ extern "C" __declspec(dllexport) void __cdecl update_and_render(
   game_state *game, 
   user_command command
 ) {
-  float dt = 0.015;
+  float dt = 0.0166666666667;
 
   glm::vec2 movement = glm::vec2(0.0f);
 
@@ -58,20 +58,19 @@ extern "C" __declspec(dllexport) void __cdecl update_and_render(
   }
 
   if (movement != glm::vec2(0.0f)) {
-    movement = glm::normalize(movement) * 50.0f * dt;
+    movement = glm::normalize(movement) * 300.0f * dt;
     
     game->playerX += movement.x;
     game->playerY += movement.y;
   }
 
-  renderer.drawImage(game->playerX, game->playerY, 50.0, 50.0, "tiles", 2);
-
   for (int y = 0; y < floor_layer.height; y++) {
     for (int x = 0; x < floor_layer.width; x++) {
       int tile = floor_layer.tiles[y * floor_layer.width + x];
       if (tile != 0) {
-        renderer.drawImage(x * 32.0, (floor_layer.height - y) * 32.0, 32.0, 32.0, "tiles", tile - 1);
+        renderer.drawImage(x * 32.0, (floor_layer.height - y) * 32.0, 32.0, 32.0, "spritesheet1", tile - 1);
       }
     }
   }
+  renderer.drawImage(game->playerX, game->playerY, 32.0, 32.0, "spritesheet1", 2);
 }
