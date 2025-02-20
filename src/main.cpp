@@ -56,7 +56,7 @@ static void loadGameLibrary() {
 
   renderer_interface rendererInterface = {};
   rendererInterface.drawImage = drawImage;
-  rendererInterface.loadTexture = loadTexture;
+  rendererInterface.loadSpritesheet = loadSpritesheet;
   
   gameLibrary.init(rendererInterface);
   gameLibrary.loaded = true;

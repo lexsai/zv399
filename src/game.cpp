@@ -30,7 +30,8 @@ void loadMap(char *filename) {
 
 extern "C" __declspec(dllexport) void __cdecl init(renderer_interface rendererInterface) {
   renderer = rendererInterface;
-  renderer.loadTexture("assets/transparentplayer.png", "player", 0);
+  // renderer.loadSpritesheet(filename, name, tileWidth, tileHeight, sheetWidth, sheetHeight, textureUnit)
+  renderer.loadSpritesheet("assets/tiles.png", "tiles", 16, 16, 4, 4, 0);
 
   loadMap("assets/testmap.tmj");
 }
@@ -63,12 +64,13 @@ extern "C" __declspec(dllexport) void __cdecl update_and_render(
     game->playerY += movement.y;
   }
 
-  renderer.drawImage(game->playerX, game->playerY, 50.0, 50.0, "player");
+  renderer.drawImage(game->playerX, game->playerY, 50.0, 50.0, "tiles", 2);
 
   for (int y = 0; y < floor_layer.height; y++) {
     for (int x = 0; x < floor_layer.width; x++) {
-      if (floor_layer.tiles[y * floor_layer.width + x] == 2) {
-        renderer.drawImage(x * 32.0, (floor_layer.height - y) * 32.0, 32.0, 32.0, "player");
+      int tile = floor_layer.tiles[y * floor_layer.width + x];
+      if (tile != 0) {
+        renderer.drawImage(x * 32.0, (floor_layer.height - y) * 32.0, 32.0, 32.0, "tiles", tile - 1);
       }
     }
   }

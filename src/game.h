@@ -19,18 +19,23 @@ struct user_command {
 typedef void (__cdecl *DRAWIMAGEPROC)(
   float x, float y,
   float w, float h,
-  char* textureName
+  char* textureName,
+  int spriteIndex
 ); 
 
-typedef void (__cdecl *LOADTEXTUREPROC)(
+typedef void (__cdecl *LOADSPRITESHEETPROC)(
   char *filename, 
   char *textureName, 
+  int tileWidth, 
+  int tileHeight, 
+  int sheetWidth, 
+  int sheetHeight, 
   unsigned int textureUnit
 ); 
 
 struct renderer_interface {
   DRAWIMAGEPROC drawImage;
-  LOADTEXTUREPROC loadTexture;
+  LOADSPRITESHEETPROC loadSpritesheet;
 };
 
 #endif

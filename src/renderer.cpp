@@ -17,9 +17,24 @@ static unsigned int shaderProgram;
 static unsigned int VAO;
 static float cameraX;
 static float cameraY;
-static std::unordered_map<std::string, unsigned int> textureMap;
 
-void loadTexture(char *filename, char *textureName, unsigned int textureUnit) {
+struct texture_data { 
+  int imageWidth;
+  int imageHeight; 
+  int tileWidth;
+  int tileHeight; 
+  int sheetWidth;
+  int sheetHeight;
+  unsigned int textureUnit;
+};
+static std::unordered_map<std::string, texture_data> textureMap;
+
+// TODO: figure out how to organize vbo data
+static int textureOffsetInVBO;
+static unsigned int VBO;
+
+// TODO: MOVE THIS INTO A STRUCT ! ! ! too many params
+void loadSpritesheet(char *filename, char *textureName, int tileWidth, int tileHeight, int sheetWidth, int sheetHeight, unsigned int textureUnit) {
   unsigned int texture;
   glGenTextures(1, &texture);
 
@@ -28,8 +43,8 @@ void loadTexture(char *filename, char *textureName, unsigned int textureUnit) {
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
   int width, height, nrChannels;
   stbi_set_flip_vertically_on_load(true);
@@ -46,7 +61,16 @@ void loadTexture(char *filename, char *textureName, unsigned int textureUnit) {
   }
   stbi_image_free(data);;
 
-  textureMap[textureName] = textureUnit;
+  texture_data textureData = {};
+  textureData.imageHeight = height;
+  textureData.imageWidth = width;
+  textureData.tileWidth = tileWidth;
+  textureData.tileHeight = tileHeight;
+  textureData.sheetWidth = sheetWidth;
+  textureData.sheetHeight = sheetHeight;
+  textureData.textureUnit = textureUnit;
+
+  textureMap[textureName] = textureData;
 }
 
 static std::string readFileToString(char *filename) {
@@ -112,26 +136,38 @@ void rendererInit() {
 
   shaderProgram = createShaderProgram("assets/shaders/vert.glsl", "assets/shaders/frag.glsl");
 
-  float vertices[] = {
-    // positions      // texture coords
-    1.0f, 1.0f, 0.0f, 1.0f, 1.0f, // top right
-    1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom right
-    0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // top left
-    1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom right
-    0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // bottom left
-    0.0f, 1.0f, 0.0f, 0.0f, 1.0f  // top left
+  float positions[] = {
+    1.0f, 1.0f, 0.0f,
+    1.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 0.0f,
+    1.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 0.0f
   };
 
-  unsigned int VBO;
+
+  float texCoords[] = {
+    1.0f, 1.0f, // top right
+    1.0f, 0.0f, // bottom right
+    0.0f, 1.0f, // top left
+    1.0f, 0.0, // bottom right
+    0.0f, 0.0f, // bottom left
+    0.0f, 1.0f  // top left
+  };
+  
+  textureOffsetInVBO = sizeof(positions);
+
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
   glBindVertexArray(VAO);
 
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(positions) + sizeof(texCoords), NULL, GL_STATIC_DRAW);
+  glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(positions), positions);
+  glBufferSubData(GL_ARRAY_BUFFER, sizeof(positions), sizeof(texCoords), texCoords);
 
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)(sizeof(positions)));
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);  
 
@@ -141,7 +177,7 @@ void rendererInit() {
   glUniform1i(glGetUniformLocation(shaderProgram, "currentTextureUnit"), 0);
 }
 
-void drawImage(float x, float y, float w, float h, char *textureName) {
+void drawImage(float x, float y, float w, float h, char *textureName, int spriteIndex) {
   glUseProgram(shaderProgram);
 
   glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(x - 0.5, y - 0.5, 0.0f));
@@ -152,16 +188,44 @@ void drawImage(float x, float y, float w, float h, char *textureName) {
     cameraY - 360, cameraY + 360, 
     0.1f, 10.0f
   );
-
+  
   glm::mat4 mvp = projection * view * model;
 
   int mvpLoc = glGetUniformLocation(shaderProgram, "mvp");
   glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(mvp));
 
-  glUniform1i(glGetUniformLocation(shaderProgram, "currentTextureUnit"), textureMap[textureName]);
+  texture_data textureData = textureMap[textureName];
+  float normalizedWidth = (float)textureData.tileWidth / textureData.imageWidth;
+  float normalizedHeight = (float)textureData.tileHeight / textureData.imageHeight;  
 
+  int xTexPos = spriteIndex % textureData.sheetWidth;
+  int yTexPos =  spriteIndex / textureData.sheetWidth;
+
+  float texCoords[] = {
+    (xTexPos + 1) * normalizedWidth, (yTexPos + 1) * normalizedHeight, // top right
+    (xTexPos + 1) * normalizedWidth, yTexPos * normalizedHeight, // bottom right
+    xTexPos * normalizedWidth, (yTexPos + 1) * normalizedHeight, // top left
+    (xTexPos + 1) * normalizedWidth, yTexPos * normalizedHeight, // bottom right
+    xTexPos * normalizedWidth, yTexPos * normalizedHeight, // bottom left
+    xTexPos * normalizedWidth, (yTexPos + 1) * normalizedHeight  // top left
+  };
+  
+  // float texCoords[] = {
+  //   0.25f, 1.0f, // top right
+  //   0.25f, 0.75f, // bottom right
+  //   0.0f, 1.0f, // top left
+  //   0.25f, 0.75f, // bottom right
+  //   0.0f, 0.75f, // bottom left
+  //   0.0f, 1.0f  // top left
+  // };
+  
+  glUniform1i(glGetUniformLocation(shaderProgram, "currentTextureUnit"), textureData.textureUnit);
+  
   glBindVertexArray(VAO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);   
+  glBufferSubData(GL_ARRAY_BUFFER, textureOffsetInVBO, sizeof(texCoords), texCoords);
   glDrawArrays(GL_TRIANGLES, 0, 6);  
+  glBindVertexArray(0);
 }
 
 void fillScreen(float r, float g, float b, float a) {
