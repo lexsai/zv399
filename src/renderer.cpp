@@ -183,8 +183,8 @@ void drawImage(float x, float y, float w, float h, char *textureName, int sprite
   model = glm::scale(model, glm::vec3(w, h, 1.0f));
   glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
   glm::mat4 projection = glm::ortho(
-    cameraX - 640, cameraX + 640, 
-    cameraY - 368, cameraY + 368, 
+    cameraX - 240, cameraX + 240, 
+    cameraY - 144, cameraY + 144, 
     0.1f, 10.0f
   );
   
@@ -198,7 +198,7 @@ void drawImage(float x, float y, float w, float h, char *textureName, int sprite
   float normalizedHeight = (float)textureData.tileHeight / textureData.imageHeight;  
 
   int xTexPos = spriteIndex % textureData.sheetWidth;
-  int yTexPos =  spriteIndex / textureData.sheetWidth;
+  int yTexPos = (textureData.sheetHeight - 1) - spriteIndex / textureData.sheetWidth;
 
   float texCoords[] = {
     (xTexPos + 1) * normalizedWidth, (yTexPos + 1) * normalizedHeight, // top right
@@ -208,15 +208,6 @@ void drawImage(float x, float y, float w, float h, char *textureName, int sprite
     xTexPos * normalizedWidth, yTexPos * normalizedHeight, // bottom left
     xTexPos * normalizedWidth, (yTexPos + 1) * normalizedHeight  // top left
   };
-  
-  // float texCoords[] = {
-  //   0.25f, 1.0f, // top right
-  //   0.25f, 0.75f, // bottom right
-  //   0.0f, 1.0f, // top left
-  //   0.25f, 0.75f, // bottom right
-  //   0.0f, 0.75f, // bottom left
-  //   0.0f, 1.0f  // top left
-  // };
   
   glUniform1i(glGetUniformLocation(shaderProgram, "currentTextureUnit"), textureData.textureUnit);
   
