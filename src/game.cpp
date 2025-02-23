@@ -26,6 +26,24 @@ static map_layer ceilingLayer;
 
 static std::vector<collision_box> collisionBoxes;
 
+static bool inBox(float x, float y, collision_box box) {
+  return x > box.beginX && x < box.endX && y > box.beginY && y < box.endY;
+}
+
+static bool doesCollide(float x, float y) {
+  bool collides = false;
+  for (collision_box box : collisionBoxes) {
+    if (inBox(x, y, box)
+        || inBox(x + 16, y, box)
+        || inBox(x, y + 16, box)
+        || inBox(x + 16, y + 16, box)
+    ) {
+      collides = true;
+    }
+  }
+  return collides;
+}
+
 static void loadMap(char *filename) {
   std::ifstream ifs = std::ifstream(filename);
   nlohmann::json data = nlohmann::json::parse(ifs);
@@ -93,55 +111,23 @@ extern "C" __declspec(dllexport) void __cdecl update_and_render(
   if (movement != glm::vec2(0.0f)) {
     movement = glm::normalize(movement) * 200.0f * dt;
 
-    int finalLocX = game->playerX;
-    int finalLocY = game->playerY;
-
-    std::cout << "-" << std::endl;
-    for (collision_box box : collisionBoxes) {
-      std::cout << "box" << ", " << box.beginX << ", " << box.beginY << std::endl;
-  
-      if (game->playerY + movement.y + 16 > box.beginY
-          && game->playerY + movement.y + 16 < box.endY
-          && ((game->playerX + 16 > box.beginX && game->playerX < box.beginX) 
-              || (game->playerX < box.endX && game->playerX + 16 > box.endX)
-              || (game->playerX >= box.beginX && game->playerX + 16 <= box.endX))) {
-        finalLocY = box.beginY - 16;
-        movement.y = 0;
-      } else if (game->playerY + movement.y > box.beginY
-          && game->playerY + movement.y < box.endY
-          && ((game->playerX + 16 > box.beginX && game->playerX < box.beginX) 
-              || (game->playerX < box.endX && game->playerX + 16 > box.endX)
-              || (game->playerX >= box.beginX && game->playerX + 16 <= box.endX))) {
-        finalLocY = box.endY;
-        movement.y = 0;
-      }
-
-      if (game->playerX + movement.x + 16 > box.beginX
-          && game->playerX + movement.x + 16 < box.endX
-          && ((game->playerY + 16 > box.beginY && game->playerY < box.beginY) 
-              || (game->playerY < box.endY && game->playerY + 16 > box.endY) 
-              || (game->playerY >= box.beginY && game->playerY + 16 <= box.endY))) {
-        finalLocX = box.beginX - 16;
-        movement.x = 0;
-      } else if (game->playerX + movement.x > box.beginX
-          && game->playerX + movement.x < box.endX
-          && ((game->playerY + 16 > box.beginY && game->playerY < box.beginY) 
-              || (game->playerY < box.endY && game->playerY + 16 > box.endY)
-              || (game->playerY >= box.beginY && game->playerY + 16 <= box.endY))) {
-        finalLocX = box.endX;
-        movement.x = 0;
-      }
+    if (doesCollide(game->playerX + movement.x, game->playerY)) {
+      std::cout << "would collide x!" << std::endl;
+      movement.x = 0.0f;
     }
-  
-    finalLocX += movement.x;
-    finalLocY += movement.y;
+    if (doesCollide(game->playerX, game->playerY + movement.y)) {
+      movement.y = 0.0f;
+      std::cout << "would collide y!" << std::endl;
+    }
 
-    game->playerX = finalLocX;
-    game->playerY = finalLocY;
+    std::cout << game->playerX << std::endl;
+
+    game->playerX = game->playerX + movement.x;
+    game->playerY = game->playerY + movement.y;
   }
 
-  renderer.setCameraPos((int)game->playerX, (int)game->playerY);
-
+  renderer.setCameraPos(game->playerX, game->playerY);
+ 
   for (int y = 0; y < floorLayer.height; y++) {
     for (int x = 0; x < floorLayer.width; x++) {
       int tile = floorLayer.tiles[y * floorLayer.width + x];
