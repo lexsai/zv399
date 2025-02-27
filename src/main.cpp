@@ -59,6 +59,7 @@ static void loadGameLibrary() {
 
   renderer_interface rendererInterface = {};
   rendererInterface.drawImage = drawImage;
+  rendererInterface.drawBackground = drawBackground;
   rendererInterface.loadSpritesheet = loadSpritesheet;
   rendererInterface.setCameraPos = setCameraPos;
   
@@ -162,12 +163,13 @@ int main(int argc, char** argv) {
     if (delta > 0) {
       delta -= 15;
       
-      
       fillScreen(0.3f, 0.5f, 1.0f, 1.0f);
 
       if (gameLibrary.loaded) {
         gameLibrary.updateAndRender(&gameState, userCommand);
       }
+
+      gameState.gameTime += 0.0166666666667;
       SDL_GL_SwapWindow(window);
     }
 

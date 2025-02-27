@@ -218,6 +218,43 @@ void drawImage(float x, float y, float w, float h, char *textureName, int sprite
   glBindVertexArray(0);
 }
 
+void drawBackground(float x, float y, float w, float h, char *textureName, float textureLoop, float offsetX, float offsetY) {
+  glUseProgram(shaderProgram);
+
+  glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(x - 0.5, y - 0.5, 0.0f));
+  model = glm::scale(model, glm::vec3(w, h, 1.0f));
+  glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
+  glm::mat4 projection = glm::ortho(
+    cameraX - 240, cameraX + 240, 
+    cameraY - 144, cameraY + 144, 
+    0.1f, 10.0f
+  );
+  
+  glm::mat4 mvp = projection * view * model;
+
+  int mvpLoc = glGetUniformLocation(shaderProgram, "mvp");
+  glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(mvp));
+
+  texture_data textureData = textureMap[textureName];
+
+  float texCoords[] = {
+    textureLoop + offsetX, textureLoop + offsetY, // top right
+    textureLoop + offsetX, 0.0f + offsetY, // bottom right
+    0.0f + offsetX, textureLoop + offsetY, // top left
+    textureLoop + offsetX, 0.0f + offsetY, // bottom right
+    0.0f + offsetX, 0.0f + offsetY, // bottom left
+    0.0f + offsetX, textureLoop + offsetY, // top left
+  };
+  
+  glUniform1i(glGetUniformLocation(shaderProgram, "currentTextureUnit"), textureData.textureUnit);
+  
+  glBindVertexArray(VAO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);   
+  glBufferSubData(GL_ARRAY_BUFFER, textureOffsetInVBO, sizeof(texCoords), texCoords);
+  glDrawArrays(GL_TRIANGLES, 0, 6);  
+  glBindVertexArray(0);
+}
+
 void fillScreen(float r, float g, float b, float a) {
   glClearColor(r, g, b, a);
   glClear(GL_COLOR_BUFFER_BIT);

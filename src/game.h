@@ -7,6 +7,7 @@
 struct game_state {
   float playerX;
   float playerY;
+  float gameTime;
 };
 
 struct user_command {
@@ -22,6 +23,14 @@ typedef void (__cdecl *DRAWIMAGEPROC)(
   char* textureName,
   int spriteIndex
 ); 
+
+typedef void (__cdecl *DRAWBACKGROUNDPROC)(
+  float x, float y, 
+  float w, float h, 
+  char *textureName, 
+  float textureLoop, 
+  float offsetX, float offsetY
+);
 
 typedef void (__cdecl *LOADSPRITESHEETPROC)(
   char *filename, 
@@ -39,6 +48,7 @@ typedef void (__cdecl *SETCAMERAPOSPROC)(
 
 struct renderer_interface {
   DRAWIMAGEPROC drawImage;
+  DRAWBACKGROUNDPROC drawBackground;
   LOADSPRITESHEETPROC loadSpritesheet;
   SETCAMERAPOSPROC setCameraPos;
 };

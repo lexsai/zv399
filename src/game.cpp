@@ -83,6 +83,7 @@ extern "C" __declspec(dllexport) void __cdecl init(renderer_interface rendererIn
   renderer = rendererInterface;
   // renderer.loadSpritesheet(filename, name, tileWidth, tileHeight, sheetWidth, sheetHeight, textureUnit)
   renderer.loadSpritesheet("assets/tiles.png", "spritesheet1", 16, 16, 4, 4, 0);
+  renderer.loadSpritesheet("assets/bg3.jpg", "brickwall", 1280, 832, 1, 1, 1);
 
   loadMap("assets/testmap.tmj");
 }
@@ -112,15 +113,11 @@ extern "C" __declspec(dllexport) void __cdecl update_and_render(
     movement = glm::normalize(movement) * 200.0f * dt;
 
     if (doesCollide(game->playerX + movement.x, game->playerY)) {
-      std::cout << "would collide x!" << std::endl;
       movement.x = 0.0f;
     }
     if (doesCollide(game->playerX, game->playerY + movement.y)) {
       movement.y = 0.0f;
-      std::cout << "would collide y!" << std::endl;
     }
-
-    std::cout << game->playerX << std::endl;
 
     game->playerX = game->playerX + movement.x;
     game->playerY = game->playerY + movement.y;
@@ -128,6 +125,12 @@ extern "C" __declspec(dllexport) void __cdecl update_and_render(
 
   renderer.setCameraPos(game->playerX, game->playerY);
  
+  renderer.drawBackground(
+    game->playerX - 240.0f, game->playerY - 144.0f, 
+    481.0f, 481.0f, 
+    "brickwall", 
+    4, game->playerX / 100.0f + game->gameTime / 20.0f, game->playerY / 100.0f + game->gameTime / 20.0f);
+
   for (int y = 0; y < floorLayer.height; y++) {
     for (int x = 0; x < floorLayer.width; x++) {
       int tile = floorLayer.tiles[y * floorLayer.width + x];

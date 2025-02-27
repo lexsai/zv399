@@ -7,11 +7,11 @@
             "scaleInDock": 3
         },
         "V:/assets/testmap.tmj": {
-            "scale": 2,
-            "selectedLayer": 2,
+            "scale": 0.75,
+            "selectedLayer": 0,
             "viewCenter": {
-                "x": 248.25,
-                "y": 152
+                "x": 191.33333333333337,
+                "y": 226.66666666666663
             }
         },
         "V:/assets/testmap.tmj#testtileset": {
