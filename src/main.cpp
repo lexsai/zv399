@@ -8,7 +8,6 @@
 
 #include <iostream>
 
-
 typedef void (__cdecl *UPDATEPROC)(
   struct game_state *game, 
   struct user_command userCommand
@@ -107,8 +106,8 @@ static void receiveInput(SDL_Scancode keyCode, bool isDown) {
 }
 
 void gameInit() {
-  gameState.playerX = 5.0f;
-  gameState.playerY = 5.0f;
+  gameState.playerX = 16.0f;
+  gameState.playerY = 16.0f;
 }
 
 int main(int argc, char** argv) {

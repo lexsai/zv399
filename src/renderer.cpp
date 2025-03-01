@@ -237,6 +237,9 @@ void drawBackground(float x, float y, float w, float h, char *textureName, float
 
   texture_data textureData = textureMap[textureName];
 
+  offsetX = offsetX / (w / textureLoop);
+  offsetY = offsetY / (h / textureLoop);
+
   float texCoords[] = {
     textureLoop + offsetX, textureLoop + offsetY, // top right
     textureLoop + offsetX, 0.0f + offsetY, // bottom right
